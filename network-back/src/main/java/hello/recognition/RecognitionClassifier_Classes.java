@@ -24,6 +24,9 @@ import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 import static org.bytedeco.javacpp.opencv_xfeatures2d.SIFT;
 
 public class RecognitionClassifier_Classes {
+    private boolean SHOW_IMGS = false;
+    private int BEST_MATCHES = 300;
+
 
     /**
      * Start the application.
@@ -31,17 +34,10 @@ public class RecognitionClassifier_Classes {
      * @param args
      */
     public static void main(String[] args) {
-        System.out.println("Starting classifier...");
-        new RecognitionClassifier_Classes();
-        System.out.println("Stopping classifier...");
-
-    }
-
-    public RecognitionClassifier_Classes() {
 
         String[] files = new String[]{
                 // "church01.jpg",
-                "data\\tmp\\DATASET_20171028\\images\\Coca_1.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Coca_1.jpg", // first file is the source file, others are references
                 "data\\tmp\\DATASET_20171028\\images\\Coca_2.jpg",
                 "data\\tmp\\DATASET_20171028\\images\\Coca_3.jpg",
                 "data\\tmp\\DATASET_20171028\\images\\Coca_4.jpg",
@@ -51,6 +47,30 @@ public class RecognitionClassifier_Classes {
                 "data\\tmp\\DATASET_20171028\\images\\Pepsi_2.jpg",
                 "data\\tmp\\DATASET_20171028\\images\\Pepsi_3.jpg",
                 "data\\tmp\\DATASET_20171028\\images\\Pepsi_4.jpg",};
+
+
+        long startTime = System.nanoTime();
+
+        System.out.println("Starting classifier...");
+        new RecognitionClassifier_Classes(files);
+        System.out.println("Stopping classifier...");
+
+
+        long endTime = System.nanoTime();
+
+        long duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
+
+        System.out.println("duration=" + duration + "ms");
+    }
+
+
+    /**
+     * Calling functions here.
+     *
+     * @param files
+     */
+    public RecognitionClassifier_Classes(String[] files) {
+
 
         // load lib
         loadLibraries();
@@ -82,31 +102,19 @@ public class RecognitionClassifier_Classes {
                 idxName = labelsList.indexOf(clsName);
             }
 
-            // add current classifier
+            // Add image to current classifier
             if (i > 0)
                 classifiers.get(idxName).addImage(images[i]);
 
 
             // =============
-            System.out.println("DESCRIPTORS");
+            //System.out.println("DESCRIPTORS");
             analyseDescriptors(images[i], sift);
 
             // show keypoints2
             Mat result = new Mat();
             drawKeypoints(images[i].getImage(), images[i].getKeyPointVector(), result, new Scalar(255, 255, 255, 1), opencv_features2d.DrawMatchesFlags.DRAW_RICH_KEYPOINTS);
             showImage(images[i], result);
-
-            // add training data 
-            // DATASET 
-            //carre * 3 niveaux 
-            // 3 niveaux de couleurs 
-            // conversion noir et blanc ? pour deux niveaux ?
-            //trainingIndexer.
-            images[i].getDescriptors();
-
-            // print all descriptors
-            OneImage current = images[i];
-            System.out.println("Descriptors size: " + current.getDescriptors().size().height() + ":" + current.getDescriptors().size().width());
 
 
         }
@@ -121,10 +129,34 @@ public class RecognitionClassifier_Classes {
 
         comparePicToClassifiers(images[0], classifiers);
 
+        // sort classifiers by score
+        classifiers.sort((c1, c2) -> (c1.getScoreMatching() < c2.getScoreMatching() ? -1 : 1));
 
-        System.out.println("Nb of classifiers: " + classifiers.size());
+        // print first one
+        showResult(images[0], classifiers.get(0));
+
+    }
 
 
+    /**
+     * This method shows result.
+     *
+     * @param image
+     * @param imageClassifier
+     */
+    private void showResult(OneImage image, ImageClassifier imageClassifier) {
+
+        System.out.println("\n\n\n============= RESULT ================");
+
+        System.out.println("Image: " + image.getFile());
+        System.out.println("Matched with: " + imageClassifier.getClassName());
+        System.out.println("% matching: " + imageClassifier.getScoreMatching());
+
+        System.out.println("=====================================\n\n\n");
+
+    }
+
+    private void findBestScore(OneImage image, List<ImageClassifier> classifiers) {
     }
 
     /**
@@ -175,10 +207,10 @@ public class RecognitionClassifier_Classes {
         DMatchVector matches = new DMatchVector();
         matcher.match(src.getDescriptors(), dst.getDescriptors(), matches);
 
-        System.out.println("Matches between " + src.getFile() + "& " + dst.getFile() + ": " + matches.size());
+        //System.out.println("Matches between " + src.getFile() + "& " + dst.getFile() + ": " + matches.size());
 
-        DMatchVector bestMatches = selectBest(matches, 100);
-        System.out.println("Best matches between " + src.getFile() + "& " + dst.getFile() + ": " + bestMatches.size());
+        DMatchVector bestMatches = selectBest(matches, BEST_MATCHES);
+        //System.out.println("Best matches between " + src.getFile() + "& " + dst.getFile() + ": " + bestMatches.size());
 
         // is it a good match?
         //isGoodMatch(bestMatches);
@@ -213,6 +245,13 @@ public class RecognitionClassifier_Classes {
         return sum;
     }
 
+    /**
+     * Select best points.
+     *
+     * @param matches
+     * @param numberToSelect
+     * @return
+     */
     DMatchVector selectBest(DMatchVector matches, int numberToSelect) {
         DMatch[] sorted = toArray(matches);
         java.util.Arrays.sort(sorted, (a, b) -> {
@@ -233,13 +272,25 @@ public class RecognitionClassifier_Classes {
         return result;
     }
 
+    /**
+     * Create SIFT with parameters...
+     *
+     * @return
+     */
+    private static SIFT sift;
+
     private SIFT createSIFT() {
+        if (sift != null)
+            return sift;
+
         int nFeatures = 0;
         int nOctaveLayers = 3;
         double contrastThreshold = 0.03;
         int edgeThreshold = 10;
         double sigma = 1.6;
-        return SIFT.create(nFeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma);
+
+        sift = SIFT.create(nFeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma);
+        return sift;
     }
 
     /**
@@ -253,12 +304,10 @@ public class RecognitionClassifier_Classes {
         Mat image = oneImage.getImage();
         System.out.println("Analyse img[" + image.size().width() + "-" + image.size().height() + "]");
         if (image.size().height() == 0 || image.size().width() == 0) {
-            exitError("One image is null...");
+            exitError("One image is null... -> " + oneImage.getFile());
         }
 
-        System.out.println("SIFT starting...");
         sift.detect(image, oneImage.getKeyPointVector());
-        System.out.println("SIFT done...");
 
     }
 

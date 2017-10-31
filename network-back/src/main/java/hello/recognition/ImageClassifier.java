@@ -44,4 +44,8 @@ public class ImageClassifier {
     public void setScoreMatching(float scoreMatching) {
         this.scoreMatching = scoreMatching;
     }
+
+    public float getScoreMatching() {
+        return scoreMatching;
+    }
 }
