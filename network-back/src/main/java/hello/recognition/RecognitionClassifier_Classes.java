@@ -9,6 +9,7 @@ import org.bytedeco.javacpp.*;
 
 import java.util.*;
 import java.util.Arrays;
+
 import org.bytedeco.javacpp.indexer.DoubleIndexer;
 import org.bytedeco.javacpp.indexer.FloatIndexer;
 import org.bytedeco.javacpp.indexer.Indexer;
@@ -24,31 +25,38 @@ import static org.bytedeco.javacpp.opencv_xfeatures2d.SIFT;
 
 public class RecognitionClassifier_Classes {
 
-    private boolean SHOW_IMGS = false;
-
+    /**
+     * Start the application.
+     *
+     * @param args
+     */
     public static void main(String[] args) {
-        RecognitionClassifier_Classes tp4 = new RecognitionClassifier_Classes(100);
+        System.out.println("Starting classifier...");
+        new RecognitionClassifier_Classes();
+        System.out.println("Stopping classifier...");
+
     }
 
-    public RecognitionClassifier_Classes(int BEST_MATCHES) {
+    public RecognitionClassifier_Classes() {
 
         String[] files = new String[]{
-            // "church01.jpg",
-            "data\\tmp\\DATASET_20171028\\images\\Coca_1.jpg",
-            "data\\tmp\\DATASET_20171028\\images\\Coca_2.jpg",
-            "data\\tmp\\DATASET_20171028\\images\\Coca_3.jpg",
-            "data\\tmp\\DATASET_20171028\\images\\Coca_4.jpg",
-            "data\\tmp\\DATASET_20171028\\images\\Coca_5.jpg",
-            "data\\tmp\\DATASET_20171028\\images\\Coca_6.jpg",
-            "data\\tmp\\DATASET_20171028\\images\\Pepsi_1.jpg",
-            "data\\tmp\\DATASET_20171028\\images\\Pepsi_2.jpg",
-            "data\\tmp\\DATASET_20171028\\images\\Pepsi_3.jpg",
-            "data\\tmp\\DATASET_20171028\\images\\Pepsi_4.jpg",};
+                // "church01.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Coca_1.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Coca_2.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Coca_3.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Coca_4.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Coca_5.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Coca_6.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Pepsi_1.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Pepsi_2.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Pepsi_3.jpg",
+                "data\\tmp\\DATASET_20171028\\images\\Pepsi_4.jpg",};
 
         // load lib
         loadLibraries();
 
         OneImage[] images = readImages(files);
+
 
         /**
          * CREATE SIFT
@@ -56,13 +64,7 @@ public class RecognitionClassifier_Classes {
         SIFT sift = createSIFT();
 
         List<String> labelsList = new ArrayList<>();
-
-        Mat trainingData = new Mat();
-        //DoubleIndexer trainingIndexer = trainingData.createIndexer();
-
-        // x detected classifiers
-        Mat trainingLabels = new Mat(images.length, 1, CV_32S);
-        IntIndexer trainingLabelsIndexer = trainingLabels.createIndexer();
+        List<ImageClassifier> classifiers = new ArrayList<>();
 
         for (int i = 0; i < images.length; i++) {
             System.out.println("ANALYSE for " + images[i].getFile());
@@ -75,8 +77,15 @@ public class RecognitionClassifier_Classes {
 
             if (idxName == -1) {
                 labelsList.add(clsName);
+                classifiers.add(new ImageClassifier(clsName));
+
                 idxName = labelsList.indexOf(clsName);
             }
+
+            // add current classifier
+            if (i > 0)
+                classifiers.get(idxName).addImage(images[i]);
+
 
             // =============
             System.out.println("DESCRIPTORS");
@@ -97,159 +106,92 @@ public class RecognitionClassifier_Classes {
 
             // print all descriptors
             OneImage current = images[i];
-            FloatIndexer currentIndexer = current.getDescriptors().createIndexer();
             System.out.println("Descriptors size: " + current.getDescriptors().size().height() + ":" + current.getDescriptors().size().width());
-            
-            for (int j = 0; j < current.getDescriptors().size().height(); j++) {
 
-                for (int k = 0; k < current.getDescriptors().size().width(); k++) {
-                    
-                    //System.out.print(currentIndexer.get(j, k) +" ");
-                }
-//                System.out.println("\\n");
 
-            }
-
-            // LABEL
-            trainingLabelsIndexer.put(i, 0, idxName); // at x:0 y:i 
         }
 
-        
-        
-        
-        
+
         // PICS
-        comparePICS(images);
+        //comparePICS(images);
 
         // score list
-        findBestScore(images);
+        //findBestScore(images);
 
-        System.out.println("Nb of classifiers: " + labelsList.size());
 
-        opencv_ml.KNearest kn = opencv_ml.KNearest.create();
-        kn.setIsClassifier(true);
-        kn.train(trainingData, CV_8U, trainingLabels);
+        comparePicToClassifiers(images[0], classifiers);
 
-        // show labels
-        System.out.println("Label contains: " + trainingLabels.size().height() + ":" + trainingLabels.size().width());
+
+        System.out.println("Nb of classifiers: " + classifiers.size());
+
 
     }
 
     /**
-     * @param
+     * Compare with each classifier.
+     *
+     * @param image
+     * @param classifiers
      */
-    private void findBestScore(OneImage[] images) {
+    private void comparePicToClassifiers(OneImage image, List<ImageClassifier> classifiers) {
+        System.out.println("===================\n");
 
-        float best_score = -1;
-        OneImage bestClose = null;
+        for (ImageClassifier imageClassifier : classifiers) {
+            System.out.println("Comparing " + image.getFile() + " to classifier: " + imageClassifier.getClassName());
 
-        for (int i = 0; i < images.length; i++) {
+            float totalScore = 0.0f;
 
-            OneImage img = images[i];
-            if (img == null) {
-                continue;
-            } else if (img.getScore() == -1) {
-                System.out.println("Skipping " + img.getFile() + " => score -1");
-                continue;
+            // moyenne des distances par rapport à chaque image du classifier
+            for (OneImage refImg : imageClassifier.getImages()) {
+                // score each image
+                comparePIC(image, refImg);
+                totalScore += refImg.getScore();
             }
 
-            float score = img.getScore();
+            // Average of scores by classifiers
+            totalScore /= imageClassifier.getImages().size();
 
-            // set best one
-            if (best_score == -1 || score < best_score) {
-                if (best_score == -1) {
-                    System.out.println("Setting " + img.getFile() + " as better... first");
-                } else {
-                    System.out.println("Setting " + img.getFile() + "  better than " + bestClose.getFile() + " [" + best_score + "-" + score + "]");
-                }
-
-                best_score = score;
-                bestClose = img;
-
-            } else {
-                System.out.println("No,  " + img.getFile() + " isn't better than " + bestClose.getFile() + " [" + best_score + "-" + score + "]");
-
-            }
-
+            imageClassifier.setScoreMatching(totalScore);
+            System.out.println("Total score for " + imageClassifier.getClassName() + " :" + totalScore);
         }
 
-        if (best_score > -1) {
-            System.out.println("ONE MATCH");
-            System.out.println("SCORE:" + best_score);
-            System.out.println("Matched with: " + bestClose.getFile());
-        } else {
-            System.out.println("No match found...");
-        }
 
     }
 
-    private void comparePICS(OneImage[] images) {
+
+    /**
+     * Compare two images
+     *
+     * @param src
+     * @param dst
+     */
+    private void comparePIC(OneImage src, OneImage dst) {
 
         // 0 is always base
         opencv_features2d.BFMatcher matcher = new opencv_features2d.BFMatcher(NORM_L1, false);
 
         // loop
-        for (int i = 1; i < images.length; i++) {
+        // entre 1 et 0
+        DMatchVector matches = new DMatchVector();
+        matcher.match(src.getDescriptors(), dst.getDescriptors(), matches);
 
-            // entre 1 et 0
-            DMatchVector matches = new DMatchVector();
-            matcher.match(images[0].getDescriptors(), images[i].getDescriptors(), matches);
+        System.out.println("Matches between " + src.getFile() + "& " + dst.getFile() + ": " + matches.size());
 
-            System.out.println("Matches between " + images[0].getFile() + "& " + images[i].getFile() + ": " + matches.size());
+        DMatchVector bestMatches = selectBest(matches, 100);
+        System.out.println("Best matches between " + src.getFile() + "& " + dst.getFile() + ": " + bestMatches.size());
 
-            DMatchVector bestMatches = selectBest(matches, 100);
-            System.out.println("Best matches between " + images[0].getFile() + "& " + images[i].getFile() + ": " + bestMatches.size());
+        // is it a good match?
+        //isGoodMatch(bestMatches);
+        float score = scoreImage(src, dst, bestMatches);
+        dst.setScore(score);
 
-            // is it a good match?
-            //isGoodMatch(bestMatches);
-            float score = scoreImage(images[0], images[i], bestMatches);
-            images[i].setScore(score);
+        Mat matchImage = new Mat();
+        drawMatches(src.getImage(), src.getKeyPointVector(), dst.getImage(), dst.getKeyPointVector(), bestMatches, matchImage);
+        showImage(dst, matchImage);
 
-            Mat matchImage = new Mat();
-            drawMatches(images[0].getImage(), images[0].getKeyPointVector(), images[i].getImage(), images[i].getKeyPointVector(), bestMatches, matchImage);
-            showImage(images[i], matchImage);
-
-        }
 
     }
 
-    /**
-     * @param bestMatches
-     */
-    private void isGoodMatch(DMatchVector bestMatches) {
-        System.out.println("IS GOOD MATCH?");
-
-        // 1. sort by distance
-        List<DMatch> sorted = new ArrayList<>();
-
-        // pour tous les points
-        for (int i = 0; i < bestMatches.size(); i++) {
-            sorted.add(bestMatches.get(i));
-            sorted.sort((o1, o2) -> o1.distance() < o2.distance() ? -1 : 1);
-        }
-
-        int nbTotalPoints = sorted.size();
-        int wellMatched = 0;
-
-        // 2. for each points
-        for (int i = 0; i < sorted.size() - 1; i++) {
-            DMatch p1 = sorted.get(i);
-            DMatch p2 = sorted.get(i + 1);
-
-            // System.out.println("p1:" + p1.distance());
-            // System.out.println("p2:" + p2.distance());
-            if (p1.distance() > (0.6f * p2.distance())) {
-                //System.out.println("Well matched!");
-                wellMatched++;
-            } else {
-                //System.out.println("Not matched...");
-            }
-        }
-
-        float pcent = (1.0f * wellMatched / nbTotalPoints) * 100;
-        System.out.println("Matched at " + pcent + "%");
-
-    }
 
     /**
      * Sum of all distances.
@@ -265,6 +207,8 @@ public class RecognitionClassifier_Classes {
         for (int i = 0; i < bestMatches.size(); i++) {
             sum += bestMatches.get(i).distance();
         }
+
+        sum /= bestMatches.size();
 
         return sum;
     }
@@ -357,15 +301,6 @@ public class RecognitionClassifier_Classes {
         }
 
         return toReturn;
-    }
-
-    /**
-     * Shoz mg
-     *
-     * @param oneImage
-     */
-    private void showImage(OneImage oneImage) {
-        showImage(oneImage, oneImage.getImage());
     }
 
     /**

@@ -17,11 +17,11 @@ import javax.validation.Path;
 public class TestReco {
     public static void main(String[] args) {
         
-        try {
+      /*  try {
             RecognitionClassifier_2 re = new RecognitionClassifier_2("data/tmp/DATASET_20171028/images");
             re.start();
         } catch (Exception ex) {
             Logger.getLogger(TestReco.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        }*/
     }
 }
