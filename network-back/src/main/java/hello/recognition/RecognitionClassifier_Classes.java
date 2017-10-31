@@ -7,6 +7,7 @@ package hello.recognition;
 
 import org.bytedeco.javacpp.*;
 
+import java.io.File;
 import java.util.*;
 import java.util.Arrays;
 
@@ -25,7 +26,7 @@ import static org.bytedeco.javacpp.opencv_xfeatures2d.SIFT;
 
 public class RecognitionClassifier_Classes {
     private boolean SHOW_IMGS = false;
-    private int BEST_MATCHES = 300;
+    private int BEST_MATCHES = 25;
 
 
     /**
@@ -35,19 +36,37 @@ public class RecognitionClassifier_Classes {
      */
     public static void main(String[] args) {
 
-        String[] files = new String[]{
-                // "church01.jpg",
-                "data\\tmp\\DATASET_20171028\\images\\Coca_1.jpg", // first file is the source file, others are references
-                "data\\tmp\\DATASET_20171028\\images\\Coca_2.jpg",
-                "data\\tmp\\DATASET_20171028\\images\\Coca_3.jpg",
-                "data\\tmp\\DATASET_20171028\\images\\Coca_4.jpg",
-                "data\\tmp\\DATASET_20171028\\images\\Coca_5.jpg",
-                "data\\tmp\\DATASET_20171028\\images\\Coca_6.jpg",
-                "data\\tmp\\DATASET_20171028\\images\\Pepsi_1.jpg",
-                "data\\tmp\\DATASET_20171028\\images\\Pepsi_2.jpg",
-                "data\\tmp\\DATASET_20171028\\images\\Pepsi_3.jpg",
-                "data\\tmp\\DATASET_20171028\\images\\Pepsi_4.jpg",};
+        List<String> allFiles = new ArrayList<>();
 
+
+        // SRC IMAGE
+        allFiles.add("data\\tmp\\Coca_perso2.jpg");
+
+
+        // REFERENCES
+        String dir = "data\\tmp\\DATASET_20171028\\images\\";
+        File directory = new File(dir);
+        File[] filesToAnalyse = directory.listFiles((f) -> {
+            String n = f.getName().toLowerCase();
+            return n.endsWith(".jpg") || n.endsWith(".png"); // finishing by jpg or png
+        });
+        for (File fi :
+                filesToAnalyse) {
+            allFiles.add(dir + fi.getName());
+        }
+
+
+        // start prog
+        startReco(allFiles.toArray(new String[0]));
+    }
+
+
+    /**
+     * START PROGRAM.
+     *
+     * @param files
+     */
+    private static void startReco(String[] files) {
 
         long startTime = System.nanoTime();
 
@@ -154,9 +173,25 @@ public class RecognitionClassifier_Classes {
 
         System.out.println("=====================================\n\n\n");
 
-    }
 
-    private void findBestScore(OneImage image, List<ImageClassifier> classifiers) {
+        for (OneImage dst :
+                imageClassifier.getImages()) {
+
+            // show image
+
+            Mat keyPoints1 = new Mat();
+            drawKeypoints(image.getImage(), image.getKeyPointVector(), keyPoints1, new Scalar(255, 255, 255, 1), opencv_features2d.DrawMatchesFlags.DRAW_RICH_KEYPOINTS);
+
+            Mat keyPoints2 = new Mat();
+            drawKeypoints(imageClassifier.getImages().get(0).getImage(), dst.getKeyPointVector(), keyPoints2, new Scalar(255, 255, 255, 1), opencv_features2d.DrawMatchesFlags.DRAW_RICH_KEYPOINTS);
+
+            Mat showResult = new Mat();
+            drawMatches(keyPoints1, image.getKeyPointVector(), keyPoints2, dst.getKeyPointVector(), dst.getMatches(), showResult);
+            showImage(image, showResult, true);
+
+        }
+
+
     }
 
     /**
@@ -216,6 +251,7 @@ public class RecognitionClassifier_Classes {
         //isGoodMatch(bestMatches);
         float score = scoreImage(src, dst, bestMatches);
         dst.setScore(score);
+        dst.setMatches(bestMatches);
 
         Mat matchImage = new Mat();
         drawMatches(src.getImage(), src.getKeyPointVector(), dst.getImage(), dst.getKeyPointVector(), bestMatches, matchImage);
@@ -358,7 +394,16 @@ public class RecognitionClassifier_Classes {
      * @param oneImage
      */
     private void showImage(OneImage oneImage, Mat img) {
-        if (SHOW_IMGS != true) {
+        showImage(oneImage, img, false);
+    }
+
+    /**
+     * Shoz mg
+     *
+     * @param oneImage
+     */
+    private void showImage(OneImage oneImage, Mat img, boolean force) {
+        if (SHOW_IMGS != true && force == false) {
             return;
         }
         namedWindow(oneImage.getFile(), WINDOW_AUTOSIZE);    //	Create	a	window	for	display.

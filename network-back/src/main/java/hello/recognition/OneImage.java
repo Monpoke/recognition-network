@@ -1,5 +1,7 @@
 package hello.recognition;
 
+import org.bytedeco.javacpp.opencv_core;
+
 import static org.bytedeco.javacpp.opencv_core.*;
 
 public class OneImage {
@@ -11,8 +13,9 @@ public class OneImage {
     private KeyPointVector keyPointVector = new KeyPointVector();
 
     private Mat descriptors = new Mat();
+    private DMatchVector matches;
 
-    
+
     public OneImage(String file, Mat image) {
         this.file = file;
         this.image = image;
@@ -59,5 +62,13 @@ public class OneImage {
         String[] parts = this.getFile().split("\\\\");
         
         return parts[parts.length-1].split("_")[0];
+    }
+
+    public void setMatches(DMatchVector matches) {
+        this.matches = matches;
+    }
+
+    public DMatchVector getMatches() {
+        return matches;
     }
 }
