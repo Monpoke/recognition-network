@@ -235,6 +235,10 @@ public class RecognitionClassifier_2 {
         return result;
     }
 
+    /**
+     * Create SIFT
+     * @return
+     */
     private SIFT createSIFT() {
         int nFeatures = 0;
         int nOctaveLayers = 3;

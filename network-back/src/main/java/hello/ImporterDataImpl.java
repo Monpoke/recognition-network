@@ -6,6 +6,8 @@
 package hello;
 
 import hello.recognition.RecognitionClassifier;
+
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,9 +18,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
@@ -27,6 +31,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
+
+import hello.service.ImagesService;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
@@ -36,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -52,6 +59,12 @@ public class ImporterDataImpl implements ImporterData, InitializingBean, Runnabl
 
     @Value("${batch.importer.tmp}")
     private String directoryTMP;
+
+
+    @Autowired
+    private ImagesService imagesService;
+
+
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -267,21 +280,26 @@ public class ImporterDataImpl implements ImporterData, InitializingBean, Runnabl
         return imgFiles;
     }
 
+
+    /**
+     * Executes the classifier.
+     *
+     * @param basedir
+     * @param filesList
+     */
     private void loadClassifier(String basedir, List<String> filesList) {
 
         try {
-            RecognitionClassifier recognitionClassifier = new RecognitionClassifier(basedir, filesList);
+            RecognitionClassifier recognitionClassifier = new RecognitionClassifier(basedir, filesList, imagesService);
             recognitionClassifier.start();
 
             // remove TMP directory
             delete(new File(basedir).getParentFile());
             log.info("Removing tmp dir...");
-        } 
-        catch(IOException ex){
+        } catch (IOException ex) {
             log.error(ex.getMessage());
             ex.printStackTrace();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             log.error("An exception has been thrown by recognition!! " + ex.getMessage());
             ex.printStackTrace();
         }
