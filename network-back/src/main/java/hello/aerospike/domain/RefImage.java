@@ -13,6 +13,7 @@ public class RefImage {
     private String name;
 
     private String classifier;
+    private byte[] baseImage;
 
     public String getId() {
         return id;
@@ -48,4 +49,11 @@ public class RefImage {
         this.classifier = classifier;
     }
 
+    public void setBaseImage(byte[] baseImage) {
+        this.baseImage = baseImage;
+    }
+
+    public byte[] getBaseImage() {
+        return baseImage;
+    }
 }

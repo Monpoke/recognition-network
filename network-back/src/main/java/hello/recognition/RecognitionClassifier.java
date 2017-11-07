@@ -5,7 +5,9 @@
  */
 package hello.recognition;
 
+import java.io.File;
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +19,7 @@ import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgcodecs.*;
 
 import hello.service.ImagesService;
+import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.opencv_ml;
 import org.bytedeco.javacpp.opencv_xfeatures2d;
 import org.slf4j.Logger;
@@ -102,8 +105,16 @@ public class RecognitionClassifier {
             refImage.setName(refImageDAO.getFilename());
             //refImage.setImage(refImageDAO.getBaseImage());
 
+
+            Mat m = new Mat(refImageDAO.getBaseImage());
+            int sz = (int)(m.total() * m.channels());
+            byte[] barr = new byte[sz];
+            m.data().get(barr);
+
+            refImage.setBaseImage(barr);
+
+
             Mat descriptors = refImageDAO.getDescriptors();
-            Serializable serializedDescriptors = (Serializable) descriptors;
             System.out.println("is seria!");
             //imagesService.save(refImage);
 
@@ -123,7 +134,7 @@ public class RecognitionClassifier {
     private void loadImages() throws Exception {
         for (String file : filesList) {
             String fullpath = this.basedir + file;
-            Mat imread = (MatSeria)imread(fullpath);
+            Mat imread = imread(fullpath);
 
             if (imread.cols() == 0 || imread.rows() == 0) {
                 throw new Exception("Image not existing... " + fullpath);
@@ -141,6 +152,11 @@ public class RecognitionClassifier {
 
             // set to list
             listImages.add(refImageDAO);
+
+
+
+
+
 
         }
 

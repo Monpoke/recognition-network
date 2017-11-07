@@ -35,13 +35,17 @@ public class ImagesServiceImpl implements ImagesService {
      */
     @Override
     public void save(RefImage refImage) {
-        try {
+
+
+
+
+        /*try {
             refImageRepository.save(refImage);
 
             System.out.println("Saved under id: "+refImage.getId());
 
         } catch(Exception ex){
             ex.printStackTrace();
-        }
+        }*/
     }
 }
