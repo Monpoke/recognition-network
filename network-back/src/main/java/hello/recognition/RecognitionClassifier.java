@@ -5,26 +5,22 @@
  */
 package hello.recognition;
 
-import java.io.File;
-import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-
 import hello.aerospike.domain.RefImage;
-import hello.dao.MatSeria;
 import hello.dao.RefImageDAO;
-
-import static org.bytedeco.javacpp.opencv_core.*;
-import static org.bytedeco.javacpp.opencv_imgcodecs.*;
-
 import hello.service.ImagesService;
+import hello.utils.GZIPCompression;
 import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.opencv_ml;
 import org.bytedeco.javacpp.opencv_xfeatures2d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.bytedeco.javacpp.opencv_core.FileStorage;
+import static org.bytedeco.javacpp.opencv_core.Mat;
+import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 
 /**
  * @author lionel
@@ -77,7 +73,6 @@ public class RecognitionClassifier {
     }
 
 
-
     /**
      * Create SIFT from openCV
      */
@@ -98,29 +93,41 @@ public class RecognitionClassifier {
         for (RefImageDAO refImageDAO :
                 listImages) {
 
-            System.out.println("Saving " + refImageDAO.getFilename());
 
             RefImage refImage = new RefImage();
             refImage.setClassifier(refImageDAO.classifier());
             refImage.setName(refImageDAO.getFilename());
-            //refImage.setImage(refImageDAO.getBaseImage());
 
 
-            Mat m = new Mat(refImageDAO.getBaseImage());
-            int sz = (int)(m.total() * m.channels());
-            byte[] barr = new byte[sz];
-            m.data().get(barr);
+            // GET POINTS
+            FileStorage fs = new FileStorage("./kp.xml", FileStorage.WRITE);
+            org.bytedeco.javacpp.opencv_core.write(fs, "base", refImageDAO.getBaseImage());
+            org.bytedeco.javacpp.opencv_core.write(fs, "desc", refImageDAO.getDescriptors());
+            org.bytedeco.javacpp.opencv_core.write(fs, "kp", refImageDAO.getKeyPointVectors());
 
-            refImage.setBaseImage(barr);
+            BytePointer bytePointer = fs.releaseAndGetString();
+
+            try {
+                String str = bytePointer.getString();
+                byte[] compressed = GZIPCompression.compress(str);
+                refImage.setMetadata(compressed);
 
 
-            Mat descriptors = refImageDAO.getDescriptors();
-            System.out.println("is seria!");
-            //imagesService.save(refImage);
+                log.info("=================");
+                log.info(GZIPCompression.decompress(compressed));
+
+                break;
+               // imagesService.save(refImage);
+             //   log.info("[saveClassifier] "+refImageDAO.getFilename() + " saved");
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                continue;
+            }
+
 
         }
-
-
 
 
     }
@@ -154,10 +161,6 @@ public class RecognitionClassifier {
             listImages.add(refImageDAO);
 
 
-
-
-
-
         }
 
     }
@@ -165,8 +168,8 @@ public class RecognitionClassifier {
     // detect interests points
     private void analyseImage(RefImageDAO refImageDAO) {
 
-        SIFT.detect(refImageDAO.getBaseImage(),refImageDAO.getKeyPointVectors());
-        SIFT.compute(refImageDAO.getBaseImage(),refImageDAO.getKeyPointVectors(),refImageDAO.getDescriptors());
+        SIFT.detect(refImageDAO.getBaseImage(), refImageDAO.getKeyPointVectors());
+        SIFT.compute(refImageDAO.getBaseImage(), refImageDAO.getKeyPointVectors(), refImageDAO.getDescriptors());
 
     }
 

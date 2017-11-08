@@ -34,7 +34,7 @@ public class AerospikeConfig {
 
         log.info("Connecting to Aerospike..");
 
-        return new AerospikeClient(policy, "localhost", 32775);
+        return new AerospikeClient(policy, "localhost", 3000);
     }
 
     public @Bean

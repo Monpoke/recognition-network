@@ -13,7 +13,7 @@ public class RefImage {
     private String name;
 
     private String classifier;
-    private byte[] baseImage;
+    private byte[] metadata;
 
     public String getId() {
         return id;
@@ -49,11 +49,11 @@ public class RefImage {
         this.classifier = classifier;
     }
 
-    public void setBaseImage(byte[] baseImage) {
-        this.baseImage = baseImage;
+    public void setMetadata(byte[] metadata) {
+        this.metadata = metadata;
     }
 
-    public byte[] getBaseImage() {
-        return baseImage;
+    public byte[] getMetadata() {
+        return metadata;
     }
 }

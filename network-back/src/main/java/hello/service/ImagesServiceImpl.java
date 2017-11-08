@@ -37,15 +37,11 @@ public class ImagesServiceImpl implements ImagesService {
     public void save(RefImage refImage) {
 
 
-
-
-        /*try {
+        try {
             refImageRepository.save(refImage);
 
-            System.out.println("Saved under id: "+refImage.getId());
-
-        } catch(Exception ex){
+        } catch (Exception ex) {
             ex.printStackTrace();
-        }*/
+        }
     }
 }
