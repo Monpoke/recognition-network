@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @author Peter Milne
  * @author Jean Mercier
  *
- */
+ *//*
 @Configuration
 @EnableAerospikeRepositories(basePackages = {"hello.aerospike.repositories"})
 @EnableAutoConfiguration
@@ -39,7 +39,7 @@ public class AerospikeConfig {
 
     public @Bean
     AerospikeTemplate aerospikeTemplate() {
-        return new AerospikeTemplate(aerospikeClient(), "test"); // TODO verify correct place for namespace
+        return new AerospikeTemplate(aerospikeClient(), "loadAllRefs"); // TODO verify correct place for namespace
     }
 
-}
+}*/

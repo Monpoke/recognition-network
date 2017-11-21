@@ -66,8 +66,6 @@ public class RecognitionClassifier {
         createSIFT();
 
         loadImages();
-        createClassifier();
-
 
         saveClassifier();
     }
@@ -100,32 +98,17 @@ public class RecognitionClassifier {
 
 
             // GET POINTS
-            FileStorage fs = new FileStorage("./kp.xml", FileStorage.WRITE);
+            FileStorage fs = new FileStorage("./kp.xml", FileStorage.WRITE|FileStorage.MEMORY);
             org.bytedeco.javacpp.opencv_core.write(fs, "base", refImageDAO.getBaseImage());
             org.bytedeco.javacpp.opencv_core.write(fs, "desc", refImageDAO.getDescriptors());
             org.bytedeco.javacpp.opencv_core.write(fs, "kp", refImageDAO.getKeyPointVectors());
 
             BytePointer bytePointer = fs.releaseAndGetString();
 
-            try {
-                String str = bytePointer.getString();
-                byte[] compressed = GZIPCompression.compress(str);
-                refImage.setMetadata(compressed);
+            refImage.setMetadata(bytePointer.getString());
 
-
-                log.info("=================");
-                log.info(GZIPCompression.decompress(compressed));
-
-                break;
-               // imagesService.save(refImage);
-             //   log.info("[saveClassifier] "+refImageDAO.getFilename() + " saved");
-
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                continue;
-            }
-
+            imagesService.finalize(refImage);
+            imagesService.save(refImage);
 
         }
 
@@ -173,8 +156,5 @@ public class RecognitionClassifier {
 
     }
 
-    private void createClassifier() {
-
-    }
 
 }
