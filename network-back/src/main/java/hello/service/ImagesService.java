@@ -15,4 +15,6 @@ public interface ImagesService {
     Iterable<RefImage> getAll();
 
     RefImage find(String id);
+
+    void test();
 }

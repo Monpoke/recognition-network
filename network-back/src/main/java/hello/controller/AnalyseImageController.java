@@ -25,6 +25,8 @@ public class AnalyseImageController {
     @ResponseBody
     public String loadAllRefs(@PathVariable  String img) {
 
+        imagesService.test();
+
         return "cool";
     }
 

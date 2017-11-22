@@ -57,11 +57,11 @@ public class OneImage {
     public void setScore(float score) {
         this.score = score;
     }
-    
-    public String getClassName(){
+
+    public String getClassName() {
         String[] parts = this.getFile().split("\\\\");
-        
-        return parts[parts.length-1].split("_")[0];
+
+        return parts[parts.length - 1].split("_")[0];
     }
 
     public void setMatches(DMatchVector matches) {
@@ -70,5 +70,19 @@ public class OneImage {
 
     public DMatchVector getMatches() {
         return matches;
+    }
+
+    public static OneImage fromFilestorage(String name, FileStorage fileStorage) {
+
+        opencv_core.FileNode base = fileStorage.getNode("base");
+        opencv_core.FileNode desc = fileStorage.getNode("desc");
+        opencv_core.FileNode kp = fileStorage.getNode("kp");
+        new opencv_core.KeyPointVector(kp.asBytePointer());
+
+        OneImage im = new OneImage(name, new Mat(base));
+        im.setDescriptors(new Mat(desc));
+        im.setKeyPointVector(new KeyPointVector(kp));
+
+        return im;
     }
 }

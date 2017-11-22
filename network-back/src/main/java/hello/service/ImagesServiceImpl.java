@@ -2,8 +2,12 @@ package hello.service;
 
 
 import hello.aerospike.domain.RefImage;
+import hello.aerospike.domain.RefImageMetadata;
 import hello.aerospike.repositories.RefImageMetadataRepository;
 import hello.aerospike.repositories.RefImageRepository;
+import hello.recognition.OneImage;
+import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.javacpp.opencv_core;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -83,5 +87,25 @@ public class ImagesServiceImpl implements ImagesService {
     @Override
     public RefImage find(String id) {
         return refImageRepository.findById(id);
+    }
+
+
+
+    @Override
+    public void test() {
+        RefImage byId = refImageRepository.findById("e00b9bc3-715c-48fe-8fa2-34de6dda567b");
+
+        opencv_core.FileStorage fs = new opencv_core.FileStorage("./kp.xml", opencv_core.FileStorage.WRITE| opencv_core.FileStorage.MEMORY);
+
+        RefImageMetadata metadata = byId.getMetadata();
+
+        BytePointer bp = new BytePointer(metadata.getMetadata());
+
+        opencv_core.FileStorage fileStorage = new opencv_core.FileStorage(bp, opencv_core.FileStorage.READ);
+
+
+        OneImage.fromFilestorage("name",fileStorage);
+
+
     }
 }
