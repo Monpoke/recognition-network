@@ -16,5 +16,5 @@ public interface ImagesService {
 
     RefImage find(String id);
 
-    void test();
+    void test(String id);
 }

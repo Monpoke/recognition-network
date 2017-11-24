@@ -10,6 +10,8 @@ import hello.dao.RefImageDAO;
 import hello.service.ImagesService;
 import hello.utils.GZIPCompression;
 import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.javacpp.indexer.UByteBufferIndexer;
+import org.bytedeco.javacpp.indexer.UByteRawIndexer;
 import org.bytedeco.javacpp.opencv_xfeatures2d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,7 +140,11 @@ public class RecognitionClassifier {
             refImageDAO.setFilename(file);
 
             analyseImage(refImageDAO);
-            log.info("Image analysed...");
+            log.info("Image analysed... -> " +imread.cols() +":"+imread.rows());
+
+            ImageAnalyser.printImage(imread);
+
+
 
             // set to list
             listImages.add(refImageDAO);

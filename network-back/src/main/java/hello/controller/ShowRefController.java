@@ -30,12 +30,16 @@ public class ShowRefController {
         Iterable<RefImage> images = imagesService.getAll();
         Iterator<RefImage> iterator = images.iterator();
 
-        StringBuilder builder  =  new StringBuilder("<table>");
+        StringBuilder builder = new StringBuilder("<table>");
 
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             RefImage next = iterator.next();
 
-            builder.append("<tr><td>"+next.getClassifier() + " </td><td><a href='/voir/"+next.getId()+"'>" + next.getId()+"</a></td></tr>\n");
+            builder.append("<tr>" +
+                    "<td>" + next.getClassifier() + " </td>" +
+                    "<td><a href='/voir/"+next.getId()+"'>" + next.getId() + "</a></td>" +
+                    "<td><a href='/analyse/"+next.getId()+"'>" + next.getId() + "</a></td>" +
+                    "</tr>\n");
 
         }
 
@@ -50,15 +54,15 @@ public class ShowRefController {
 
         RefImage image = imagesService.find(id);
 
-        StringBuilder builder  =  new StringBuilder();
+        StringBuilder builder = new StringBuilder();
 
-        builder.append("<h1>"+image.getId()+"</h1>" +
-                "<h2>"+image.getClassifier()+"</h2>");
+        builder.append("<h1>" + image.getId() + "</h1>" +
+                "<h2>" + image.getClassifier() + "</h2>");
 
         RefImageMetadata metadata = image.getMetadata();
 
         builder.append("<pre>\n" +
-                metadata.getMetadata()+"\n" +
+                metadata.getMetadata() + "\n" +
                 "</pre>");
 
         return builder.toString();

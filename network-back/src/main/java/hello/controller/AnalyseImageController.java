@@ -21,11 +21,11 @@ public class AnalyseImageController {
     @Autowired
     private ImagesService imagesService;
 
-    @RequestMapping("/analyse/{img}")
+    @RequestMapping("/analyse/{imgId}")
     @ResponseBody
-    public String loadAllRefs(@PathVariable  String img) {
+    public String loadAllRefs(@PathVariable  String imgId) {
 
-        imagesService.test();
+        imagesService.test(imgId);
 
         return "cool";
     }

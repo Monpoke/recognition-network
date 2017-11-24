@@ -21,7 +21,7 @@ public class RefImage {
     @Column
     private String metadata_hash;
 
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     private RefImageMetadata metadata;
 
 

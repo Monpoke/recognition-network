@@ -5,6 +5,8 @@ import hello.aerospike.domain.RefImage;
 import hello.aerospike.domain.RefImageMetadata;
 import hello.aerospike.repositories.RefImageMetadataRepository;
 import hello.aerospike.repositories.RefImageRepository;
+import hello.dao.RefImageDAO;
+import hello.recognition.ImageAnalyser;
 import hello.recognition.OneImage;
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.opencv_core;
@@ -92,20 +94,18 @@ public class ImagesServiceImpl implements ImagesService {
 
 
     @Override
-    public void test() {
-        RefImage byId = refImageRepository.findById("e00b9bc3-715c-48fe-8fa2-34de6dda567b");
+    public void test(String id) {
+        RefImage byId = refImageRepository.findById(id);
+        System.out.println("Image: "+ byId.getClassifier());
 
-        opencv_core.FileStorage fs = new opencv_core.FileStorage("./kp.xml", opencv_core.FileStorage.WRITE| opencv_core.FileStorage.MEMORY);
-
-        RefImageMetadata metadata = byId.getMetadata();
-
-        BytePointer bp = new BytePointer(metadata.getMetadata());
-
-        opencv_core.FileStorage fileStorage = new opencv_core.FileStorage(bp, opencv_core.FileStorage.READ);
+        try {
+            byId.getMetadata();
+            RefImageDAO refImageDAO = ImageAnalyser.convertRefToImage(byId);
 
 
-        OneImage.fromFilestorage("name",fileStorage);
-
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 }
