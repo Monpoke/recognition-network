@@ -95,19 +95,18 @@ public abstract class ImageAnalyser {
     public static RefImageDAO convertRefToImage(RefImage refImage) throws Exception {
         RefImageMetadata metadata = refImage.getMetadata();
 
-        if(metadata.getMetadata()==null){
+        if (metadata.getMetadata() == null) {
             throw new Exception("Unable to get metadata...");
         }
 
 
         System.out.println(metadata.getMetadata());
 
-        opencv_core.FileStorage fileStorage = new opencv_core.FileStorage(metadata.getMetadata(), opencv_core.FileStorage.READ| opencv_core.FileStorage.MEMORY);
+        opencv_core.FileStorage fileStorage = new opencv_core.FileStorage(metadata.getMetadata(), opencv_core.FileStorage.READ | opencv_core.FileStorage.MEMORY);
 
 
         RefImageDAO dao = new RefImageDAO();
         dao.setBaseImage(new Mat());
-
 
 
         opencv_core.FileNode desc = fileStorage.get("desc");
@@ -120,7 +119,7 @@ public abstract class ImageAnalyser {
 
         fileStorage.release();
 
-        if(dao.getBaseImage().cols() == 0|| dao.getBaseImage().rows() == 0) {
+        if (dao.getBaseImage().cols() == 0 || dao.getBaseImage().rows() == 0) {
             throw new Exception("Decompression error from DB...");
         }
 
@@ -156,7 +155,7 @@ public abstract class ImageAnalyser {
         sift.compute(refImageDAO.getBaseImage(), refImageDAO.getKeyPointVectors(), refImageDAO.getDescriptors());
     }
 
-    public static void printImage(Mat img){
+    public static void printImage(Mat img) {
 
         UByteRawIndexer sI = img.createIndexer();
 
@@ -166,7 +165,7 @@ public abstract class ImageAnalyser {
 
                 //System.out.print( sI.get(y, x) +" ");
             }
-           // System.out.println();
+            // System.out.println();
         }
     }
 }
