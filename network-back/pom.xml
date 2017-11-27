@@ -6,7 +6,7 @@
     <groupId>com.monpoke</groupId>
     <version>1.0-SNAPSHOT</version>
     <artifactId>network-back</artifactId>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
 
     <parent>

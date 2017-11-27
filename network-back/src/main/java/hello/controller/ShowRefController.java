@@ -37,8 +37,8 @@ public class ShowRefController {
 
             builder.append("<tr>" +
                     "<td>" + next.getClassifier() + " </td>" +
-                    "<td><a href='/voir/"+next.getId()+"'>" + next.getId() + "</a></td>" +
-                    "<td><a href='/analyse/"+next.getId()+"'>" + next.getId() + "</a></td>" +
+                    "<td><a href='/voir/" + next.getId() + "'>" + next.getId() + "</a></td>" +
+                    "<td><a href='/analyse/" + next.getId() + "'>" + next.getId() + "</a></td>" +
                     "</tr>\n");
 
         }

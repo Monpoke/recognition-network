@@ -164,9 +164,9 @@ public abstract class ImageAnalyser {
 
             for (int x = 0; x < img.cols(); x++) {
 
-                System.out.print( sI.get(y, x) +" ");
+                //System.out.print( sI.get(y, x) +" ");
             }
-            System.out.println();
+           // System.out.println();
         }
     }
 }
