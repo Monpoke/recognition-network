@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
+import static org.bytedeco.javacpp.opencv_imgcodecs.imreadmulti;
 
 /**
  * Contient tout le process d'analyse de l'image.
@@ -104,19 +105,26 @@ public abstract class ImageAnalyser {
         opencv_core.FileStorage fileStorage = new opencv_core.FileStorage(metadata.getMetadata(), opencv_core.FileStorage.READ| opencv_core.FileStorage.MEMORY);
 
 
-        opencv_core.FileNode base = fileStorage.getNode("base");
-        opencv_core.FileNode desc = fileStorage.getNode("desc");
-        opencv_core.FileNode kp = fileStorage.getNode("kp");
-
-
         RefImageDAO dao = new RefImageDAO();
+        dao.setBaseImage(new Mat());
+
+
+
+        opencv_core.FileNode desc = fileStorage.get("desc");
+        opencv_core.FileNode kp = fileStorage.get("kp");
+        opencv_core.FileNode base = fileStorage.get("base");
+
         dao.setDescriptors(new Mat(desc.asBytePointer()));
         dao.setKeyPointVectors(new KeyPointVector(kp.asBytePointer()));
         dao.setBaseImage(new Mat(base.asBytePointer()));
 
+        fileStorage.release();
+
         if(dao.getBaseImage().cols() == 0|| dao.getBaseImage().rows() == 0) {
             throw new Exception("Decompression error from DB...");
         }
+
+        printImage(dao.getDescriptors());
 
         return dao;
 
